@@ -27,22 +27,22 @@ class UAVConnectTool(BaseTool):
         
         return self._run(run_manager=run_manager.get_sync())
 
-# class UAVTakeOffinput(BaseModel):
+class UAVTakeOffinput(BaseModel):
 
-#     uavObj: Bebop = Field(description="Bebop class object for executing commands")
+    uavObj: Bebop = Field(description="Bebop class object for executing commands")
 
-# class UAVTakeOffTool(BaseTool):
+class UAVTakeOffTool(BaseTool):
 
-#     name = "UAVTakeOff"
-#     description = "Given a bebop object, send takeoff commands to the UAV"
-#     args_schema: Type[BaseModel] = UAVTakeOffinput
-#     return_direct: bool = False
+    name = "UAVTakeOff"
+    description = "Given a bebop object, send takeoff commands to the UAV"
+    args_schema: Type[BaseModel] = UAVTakeOffinput
+    return_direct: bool = False
 
-#     def _run(self, uavObj: Bebop, run_manager: Optional[CallbackManagerForToolRun] = None) -> None:
+    def _run(self, uavObj: Bebop, run_manager: Optional[CallbackManagerForToolRun] = None) -> None:
         
-#         uavObj.ask_for_state_update()
-#         uavObj.safe_takeoff(10)
+        uavObj.ask_for_state_update()
+        uavObj.safe_takeoff(10)
 
-#     def _arun(self, uavObj: Bebop, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> None:
+    def _arun(self, uavObj: Bebop, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> None:
         
-#         self._run(uavObj, run_manager=run_manager.get_sync())
+        self._run(uavObj, run_manager=run_manager.get_sync())
