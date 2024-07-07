@@ -2,13 +2,13 @@ from langchain_openai import ChatOpenAI
 from tools.uav_tools import *
 from langchain_core.messages import HumanMessage
 import os
-from typing import Annotated, Literal
-from langchain.agents import AgentExecutor
+from langchain.agents import AgentExecutor,create_tool_calling_agent
 from langgraph.prebuilt import ToolNode,create_react_agent
-from langchain_core.output_parsers.openai_tools import PydanticToolsParser
 from langgraph.graph import END, StateGraph, MessagesState
+from langchain_core.prompts import ChatPromptTemplate
 
-tools = [UAVConnectTool(),UAVTakeOffTool()]
+
+tools = [UAVConnectTool(),UAVTakeOffTool(),UAVLandTool()]
 
 from langchain_openai import ChatOpenAI
 
@@ -20,8 +20,28 @@ llm = ChatOpenAI(
     max_retries=2,
 )
 
-llm_with_tools = llm.bind_tools(tools)
-response = llm_with_tools.invoke("Connect to Bebop 2 and then takeoff")
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful assistant.",
+        ),
+        ("placeholder", "{chat_history}"),
+        ("human", "{input}"),
+        ("placeholder", "{agent_scratchpad}"),
+    ]
+)
+
+# Construct the Tools agent
+agent = create_tool_calling_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools,verbose=True)
+agent_executor.invoke(
+    {"input": "Connect to Bebop2 and then takeoff and then land"}
+)
+
+
+# llm_with_tools = llm.bind_tools(tools)
+# response = llm_with_tools.invoke("Connect to Bebop 2 and then takeoff")
 # agent = create_react_agent(llm, tools)
 
 # agent_executor = AgentExecutor(agent=agent,tools=tools,verbose=True)
@@ -34,7 +54,7 @@ response = llm_with_tools.invoke("Connect to Bebop 2 and then takeoff")
 #     {"input": "Connect to parrot bebop "}
 # )
 
-print(response)
+# print(response)
 
 # tool_node = ToolNode(tools)
 
