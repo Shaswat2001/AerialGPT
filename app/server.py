@@ -4,7 +4,7 @@ from langserve import add_routes
 from typing import Any, List, Union
 from langserve.pydantic_v1 import BaseModel, Field
 from langchain_core.messages import AIMessage, FunctionMessage, HumanMessage
-from agent.agent import agent_executor
+from agent.agent import agent
 
 app = FastAPI(
   title="LangChain Server",
@@ -18,7 +18,7 @@ async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
 class Input(BaseModel):
-    input: str
+    messages: str
     # The field extra defines a chat widget.
     # Please see documentation about widgets in the main README.
     # The widget is used in the playground.
@@ -34,12 +34,10 @@ class Input(BaseModel):
 class Output(BaseModel):
     output: Any
 
-
-
 # Edit this to add the chain you want to add
 add_routes(
     app,
-    agent_executor.with_types(input_type=Input, output_type=Output).with_config(
+    agent.with_types(input_type=Input, output_type=Output).with_config(
         {"run_name": "agent"}
     ),
     path="/aerialGPT"

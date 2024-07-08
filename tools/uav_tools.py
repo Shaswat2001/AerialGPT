@@ -10,10 +10,17 @@ from langchain_core.tools import BaseTool
 
 bebop_instances = {}
 
+class UAVConnectinput(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    input: str = Field(description="Name of the UAV")
+
 class UAVConnectTool(BaseTool):
 
     name = "UAVConnect"
     description = "Connects to the Parrot Bebop 2 and returns the object of type Bebop() if the connection is successful"
+    args_schema: Type[BaseModel] = UAVConnectinput
     return_direct: bool = False
 
     def _run(self,input : str) -> str:
@@ -22,13 +29,17 @@ class UAVConnectTool(BaseTool):
         bebop = Bebop()
 
         print("CONNECTING TO BEBOP")
-        success = bebop.connect(10)
-        if success:
+        
+        try:
+            success = bebop.connect(10)
             bebop.smart_sleep(5)
             instance_id = str(uuid.uuid4())
             bebop_instances[instance_id] = bebop
 
             return instance_id
+        
+        except Exception as e:
+            print("Connection Failed : {e}")
 
     def _arun(self,input : str) -> str:
         
@@ -112,6 +123,44 @@ class UAVDisplacementTool(BaseTool):
     def _arun(self, instance_id: str, displacement: List[float]) -> None:
         
         self._run(instance_id, displacement)
+
+class UAVSetParametersinput(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    instance_id: str = Field(description="Unique identifier for the Bebop instance")
+    max_altitude: float = Field(description="The maximum allowable altitude of the UAV in meters",default=None)
+    max_distance: float = Field(description="The max distance between the takeoff and the UAV in meters",default=None)
+    max_tilt: float = Field(description="The max allowable tilt in degrees for the UAV",default=None)
+    max_tilt_rotation_speed: float = Field(description="The max allowable tilt rotation speed in degree/s",default=None)
+    max_vertical_speed: float = Field(description="The maximum allowable vertical speed in m/s",default=None)
+    max_rotation_speed: float = Field(description="The maximum allowable rotation speed in degree/s",default=None)
+
+class UAVSetParametersTool(BaseTool):
+
+    name = "UAVDisplacement"
+    description = "Given a unique identifier (sent by UAVConnect) and values of different parameters to set on the UAV, default is None for all the variables"
+    args_schema: Type[BaseModel] = UAVSetParametersinput
+    return_direct: bool = False
+
+    def _run(self, instance_id: str, max_altitude: float = None, max_distance: float = None, max_tilt: float = None, max_tilt_rotation_speed: float = None, max_vertical_speed: float = None, max_rotation_speed: float = None) -> None:
+        
+        global bebop_instances
+        bebop = bebop_instances.get(instance_id)
+
+        if bebop:
+            if max_altitude:
+                bebop.set_max_altitude(max_altitude)
+            if max_distance:
+                bebop.set_max_distance(max_distance)
+            if max_tilt:
+                bebop.set_max_tilt(max_tilt)
+            if max_tilt_rotation_speed:
+                bebop.set_max_tilt_rotation_speed(max_tilt_rotation_speed)
+            if max_vertical_speed:
+                bebop.set_max_vertical_speed(max_vertical_speed)
+            if max_rotation_speed:
+                bebop.set_max_rotation_speed(max_rotation_speed)
 
 class UAVRotationinput(BaseModel):
     class Config:

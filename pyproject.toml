@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aerialGPT"
 version = "0.1.0"
-description = ""
+description = "LLM based model to control UAVs (Parrot Bebop 2)"
 authors = ["Shaswat Garg sis_shaswat@outlook.com"]
 readme = "README.md"
 packages = [
