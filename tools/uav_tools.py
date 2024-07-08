@@ -1,7 +1,7 @@
 from typing import Optional, Type, Any, List
 from pyparrot.Bebop import Bebop
 from pyparrot.DroneVision import DroneVision
-from utils import *
+from .utils import *
 import numpy as np
 import uuid
 
