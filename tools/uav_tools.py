@@ -1,6 +1,8 @@
 from typing import Optional, Type, Any, List
 from pyparrot.Bebop import Bebop
 from pyparrot.DroneVision import DroneVision
+from utils import *
+import numpy as np
 import uuid
 
 from langchain.pydantic_v1 import BaseModel,Field
@@ -136,3 +138,38 @@ class UAVRotationTool(BaseTool):
     def _arun(self, instance_id: str, rotation: List[float]) -> None:
         
         self._run(instance_id, rotation)
+
+class UAVVisioninput(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    instance_id: str = Field(description="Unique identifier for the Bebop instance")
+
+class UAVVisionTool(BaseTool):
+
+    name = "UAVVision"
+    description = "Given a unique identifier (sent by UAVConnect) and returns the image from camera as a numpy array"
+    args_schema: Type[BaseModel] = UAVVisioninput
+    return_direct: bool = False
+
+    def _run(self, instance_id: str) -> np.ndarray:
+        
+        global bebop_instances
+        bebop = bebop_instances.get(instance_id)
+
+        bebopVision = DroneVision(bebop, is_bebop=True)
+
+        userVision = UserVision(bebopVision)
+        bebopVision.set_user_callback_function(userVision.save_pictures, user_callback_args=None)
+        success = bebopVision.open_video()
+        image = np.array([0])
+        if (success):
+            
+            image = userVision.image
+            bebopVision.close_video()
+
+        return image
+
+    def _arun(self, instance_id: str) -> np.ndarray:
+        
+        self._run(instance_id)
