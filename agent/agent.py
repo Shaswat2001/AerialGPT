@@ -7,7 +7,7 @@ from langgraph.prebuilt import ToolNode,create_react_agent
 from langgraph.graph import END, StateGraph, MessagesState
 from langchain.agents import AgentExecutor,create_tool_calling_agent
 
-tools = [UAVConnectTool(),UAVTakeOffTool(),UAVLandTool(),UAVDisplacementTool(),UAVRotationTool(),UAVVisionTool(),UAVSetParametersTool()]
+tools = [UAVConnectTool(),UAVTakeOffTool(),UAVLandTool(),UAVDisplacementTool(),UAVRotationTool(),UAVVisionTool(),UAVSetParametersTool(),UAVCameraConfigTool(),UAVMoveCameraTool()]
 
 llm = ChatOpenAI(
     model="gpt-3.5-turbo",

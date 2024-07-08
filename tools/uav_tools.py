@@ -1,4 +1,4 @@
-from typing import Optional, Type, Any, List
+from typing import Type, Any, List
 from pyparrot.Bebop import Bebop
 from pyparrot.DroneVision import DroneVision
 from .utils import *
@@ -10,7 +10,7 @@ from langchain_core.tools import BaseTool
 
 bebop_instances = {}
 
-class UAVConnectinput(BaseModel):
+class UAVConnectInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -20,7 +20,7 @@ class UAVConnectTool(BaseTool):
 
     name = "UAVConnect"
     description = "Connects to the Parrot Bebop 2 and returns the object of type Bebop() if the connection is successful"
-    args_schema: Type[BaseModel] = UAVConnectinput
+    args_schema: Type[BaseModel] = UAVConnectInput
     return_direct: bool = False
 
     def _run(self,input : str) -> str:
@@ -45,7 +45,7 @@ class UAVConnectTool(BaseTool):
         
         return self._run(input)
 
-class UAVTakeOffinput(BaseModel):
+class UAVTakeOffInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -55,7 +55,7 @@ class UAVTakeOffTool(BaseTool):
 
     name = "UAVTakeOff"
     description = "Given a unique identifier (sent by UAVConnect), send takeoff commands to the UAV"
-    args_schema: Type[BaseModel] = UAVTakeOffinput
+    args_schema: Type[BaseModel] = UAVTakeOffInput
     return_direct: bool = False
 
     def _run(self, instance_id: str) -> None:
@@ -73,7 +73,7 @@ class UAVTakeOffTool(BaseTool):
         
         self._run(uavObj)
 
-class UAVLandinput(BaseModel):
+class UAVLandInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -83,7 +83,7 @@ class UAVLandTool(BaseTool):
 
     name = "UAVLand"
     description = "Given a unique identifier (sent by UAVConnect), send landing commands to the UAV"
-    args_schema: Type[BaseModel] = UAVLandinput
+    args_schema: Type[BaseModel] = UAVLandInput
     return_direct: bool = False
 
     def _run(self, instance_id: str) -> None:
@@ -98,7 +98,7 @@ class UAVLandTool(BaseTool):
         
         self._run(uavObj)
 
-class UAVDisplacementinput(BaseModel):
+class UAVDisplacementInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -109,7 +109,7 @@ class UAVDisplacementTool(BaseTool):
 
     name = "UAVDisplacement"
     description = "Given a unique identifier (sent by UAVConnect) and list containing the displacement vector, send movement commands to the UAV"
-    args_schema: Type[BaseModel] = UAVDisplacementinput
+    args_schema: Type[BaseModel] = UAVDisplacementInput
     return_direct: bool = False
 
     def _run(self, instance_id: str, displacement: List[float]) -> None:
@@ -124,7 +124,7 @@ class UAVDisplacementTool(BaseTool):
         
         self._run(instance_id, displacement)
 
-class UAVSetParametersinput(BaseModel):
+class UAVSetParametersInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -138,9 +138,9 @@ class UAVSetParametersinput(BaseModel):
 
 class UAVSetParametersTool(BaseTool):
 
-    name = "UAVDisplacement"
+    name = "UAVSetParameters"
     description = "Given a unique identifier (sent by UAVConnect) and values of different parameters to set on the UAV, default is None for all the variables"
-    args_schema: Type[BaseModel] = UAVSetParametersinput
+    args_schema: Type[BaseModel] = UAVSetParametersInput
     return_direct: bool = False
 
     def _run(self, instance_id: str, max_altitude: float = None, max_distance: float = None, max_tilt: float = None, max_tilt_rotation_speed: float = None, max_vertical_speed: float = None, max_rotation_speed: float = None) -> None:
@@ -162,7 +162,7 @@ class UAVSetParametersTool(BaseTool):
             if max_rotation_speed:
                 bebop.set_max_rotation_speed(max_rotation_speed)
 
-class UAVRotationinput(BaseModel):
+class UAVRotationInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -173,7 +173,7 @@ class UAVRotationTool(BaseTool):
 
     name = "UAVRotation"
     description = "Given a unique identifier (sent by UAVConnect) and list containing the rotation vector, send movement commands to the UAV"
-    args_schema: Type[BaseModel] = UAVRotationinput
+    args_schema: Type[BaseModel] = UAVRotationInput
     return_direct: bool = False
 
     def _run(self, instance_id: str, rotation: List[float]) -> None:
@@ -188,7 +188,66 @@ class UAVRotationTool(BaseTool):
         
         self._run(instance_id, rotation)
 
-class UAVVisioninput(BaseModel):
+class UAVCameraConfigInput(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    instance_id: str = Field(description="Unique identifier for the Bebop instance")
+    start_camera: bool = Field(description="Parameter describing whether the UAV camera feed is turned on",default=False)
+
+class UAVCameraConfigTool(BaseTool):
+
+    name = "UAVCameraConfig"
+    description = "Given a unique identifier (sent by UAVConnect) and starts or stops the camera feed given the parameter"
+    args_schema: Type[BaseModel] = UAVCameraConfigInput
+    return_direct: bool = False
+
+    def _run(self, instance_id: str, start_camera: bool = False) -> None:
+        
+        global bebop_instances
+        bebop = bebop_instances.get(instance_id)
+
+        if bebop:
+
+            if start_camera:
+                bebop.start_video_stream()
+            else:
+                bebop.stop_video_stream()
+
+    def _arun(self, instance_id: str, start_camera: bool = False) -> None:
+        
+        self._run(instance_id,start_camera)
+
+class UAVMoveCameraInput(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    instance_id: str = Field(description="Unique identifier for the Bebop instance")
+    pan_tilt: List[float] = Field(description="Parameter that pan/tilt the camera by the specified number of degrees in pan/tilt")
+    pan_tilt_velocity: List[float] = Field(description="Parameter that tilt the camera by the specified number of degrees per second in pan/tilt")
+
+class UAVMoveCameraTool(BaseTool):
+
+    name = "UAVMoveCamera"
+    description = "Given a unique identifier (sent by UAVConnect) and moves the camera in pan or tilt or sets the velocity of the camera"
+    args_schema: Type[BaseModel] = UAVMoveCameraInput
+    return_direct: bool = False
+
+    def _run(self, instance_id: str, pan_tilt: List[float], pan_tilt_velocity: List[float]) -> None:
+        
+        global bebop_instances
+        bebop = bebop_instances.get(instance_id)
+
+        if bebop:
+
+            bebop.pan_tilt_camera(pan_tilt[0],pan_tilt[1])
+            bebop.pan_tilt_camera_velocity(pan_tilt_velocity[0],pan_tilt_velocity[1])
+
+    def _arun(self, instance_id: str, pan_tilt: List[float], pan_tilt_velocity: List[float]) -> None:
+        
+        self._run(instance_id, pan_tilt, pan_tilt_velocity)
+
+class UAVVisionInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
@@ -198,7 +257,7 @@ class UAVVisionTool(BaseTool):
 
     name = "UAVVision"
     description = "Given a unique identifier (sent by UAVConnect) and returns the image from camera as a numpy array"
-    args_schema: Type[BaseModel] = UAVVisioninput
+    args_schema: Type[BaseModel] = UAVVisionInput
     return_direct: bool = False
 
     def _run(self, instance_id: str) -> np.ndarray:
