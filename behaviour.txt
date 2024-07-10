@@ -1,0 +1,3 @@
+1. The UAV is give adding displacement in [0] index only, even after giving command for right/left. - SOLVED
+2. The UAV when given backward command, goes to [1] index for value. - SOLVED
+

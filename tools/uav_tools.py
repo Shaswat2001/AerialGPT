@@ -1,9 +1,10 @@
 from typing import Type, Any, List
 from pyparrot.Bebop import Bebop
 from pyparrot.DroneVision import DroneVision
-from .utils import *
+from utils import *
 import numpy as np
 import uuid
+import cv2
 
 from langchain.pydantic_v1 import BaseModel,Field
 from langchain_core.tools import BaseTool
@@ -41,9 +42,9 @@ class UAVConnectTool(BaseTool):
         except Exception as e:
             print("Connection Failed : {e}")
 
-    def _arun(self,input : str) -> str:
+    # def _arun(self,input : str) -> str:
         
-        return self._run(input)
+    #     return self._run(input)
 
 class UAVTakeOffInput(BaseModel):
     class Config:
@@ -69,9 +70,9 @@ class UAVTakeOffTool(BaseTool):
             bebop.smart_sleep(5)
 
 
-    def _arun(self, uavObj: str) -> None:
+    # def _arun(self, uavObj: str) -> None:
         
-        self._run(uavObj)
+    #     self._run(uavObj)
 
 class UAVLandInput(BaseModel):
     class Config:
@@ -94,16 +95,12 @@ class UAVLandTool(BaseTool):
         if bebop:
             bebop.safe_land(10)
 
-    def _arun(self, uavObj: str) -> None:
-        
-        self._run(uavObj)
-
 class UAVDisplacementInput(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
     instance_id: str = Field(description="Unique identifier for the Bebop instance")
-    displacement: List[float] = Field(description="List discribing the displacement of UAV in X (forward or backward), Y (right or left) and Z (up and down) axis")
+    displacement: List[float] = Field(description="List discribing the displacement of UAV in meters [0,1,2,3], [0] (forward (+ve) and backward (-ve) in [0] index), [1] (right  (+ve) and left (-ve) in [1] index) [2] (up (+ve) and down (-ve) in [2] index) and [3] angle of UAV in radians")
 
 class UAVDisplacementTool(BaseTool):
 
@@ -118,7 +115,10 @@ class UAVDisplacementTool(BaseTool):
         bebop = bebop_instances.get(instance_id)
 
         if bebop:
-            bebop.move_relative(displacement[0],displacement[1],displacement[2])
+            try:
+                bebop.move_relative(displacement[0],displacement[1],displacement[2],displacement[3])
+            except:
+                bebop.safe_land(10)
 
     def _arun(self, instance_id: str, displacement: List[float]) -> None:
         
@@ -275,7 +275,7 @@ class UAVVisionTool(BaseTool):
             
             image = userVision.image
             bebopVision.close_video()
-
+        cv2.imwrite("Hi.png", image)
         return image
 
     def _arun(self, instance_id: str) -> np.ndarray:
