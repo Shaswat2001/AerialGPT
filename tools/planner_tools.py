@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from typing import Type,List
 from langchain.pydantic_v1 import BaseModel,Field
 from langchain_core.tools import BaseTool
-from uav_tools import bebop_instances
-from uav_tools import UAVDisplacementTool
+from tools.uav_tools import bebop_instances
+from tools.uav_tools import UAVDisplacementTool
 
 class ToppraPlannerInput(BaseModel):
     class Config:
@@ -69,37 +69,3 @@ way_pts = np.array([
     [4, 8, 6],
     [5, 10, 7]
 ])
-
-# Create an interpolator for the path
-path = ta.SplineInterpolator(np.linspace(0, 1, len(way_pts)), way_pts)
-
-# Define velocity and acceleration limits
-vlim = np.array([[-1, 1], [-1, 1], [-1, 1]]) * 3  # velocity limits in 3D
-alim = np.array([[-2, 2], [-2, 2], [-2, 2]]) * 2  # acceleration limits in 3D
-
-# Setup constraints
-pc_vel = constraint.JointVelocityConstraint(vlim)
-pc_acc = constraint.JointAccelerationConstraint(alim)
-
-# Initialize the TOPP algorithm with the constraints
-instance = algo.TOPPRA([pc_vel, pc_acc], path, solver_wrapper='seidel')
-
-# Solve the parameterization problem
-jnt_traj = instance.compute_trajectory()
-
-# Sample the trajectory for plotting
-ss = np.linspace(0, jnt_traj.duration, 100)
-qs = jnt_traj.eval(ss)
-
-# Plot the results
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot(way_pts[:, 0], way_pts[:, 1], way_pts[:, 2], 'ro-', label='Waypoints')
-ax.plot(qs[:, 0], qs[:, 1], qs[:, 2], 'b-', label='Trajectory')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.legend()
-plt.show()
-
-print(np.append((qs[1,:] - qs[0,:]),0))
