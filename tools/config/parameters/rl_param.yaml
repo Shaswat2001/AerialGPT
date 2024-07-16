@@ -1,0 +1,13 @@
+trajectory_tracking:
+  state_size: 9
+  input_shape: 9
+  n_actions: 3
+  max_action: [0.1,0.1,0.1]
+  min_action: [-0.1,-0.1,-0.1]
+
+obstacle_avoidance:
+  state_size: 606
+  input_shape: 606
+  n_actions: 3
+  max_action: [0.1,0.1,0.1]
+  min_action: [-0.1,-0.1,-0.1]

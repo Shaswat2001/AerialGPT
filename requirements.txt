@@ -1,0 +1,6 @@
+langchain-cli
+pydantic==1.10
+langchain
+langgraph
+langserve
+fastapi
